@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<beans xmlns="http://www.springframework.org/schema/beans"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"  
+    xmlns:context="http://www.springframework.org/schema/context"  
+    xmlns:mvc="http://www.springframework.org/schema/mvc"  
+    xsi:schemaLocation="http://www.springframework.org/schema/beans  
+       http://www.springframework.org/schema/beans/spring-beans-3.1.xsd  
+       http://www.springframework.org/schema/context   
+       http://www.springframework.org/schema/context/spring-context-3.1.xsd  
+       http://www.springframework.org/schema/mvc  
+       http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd">  
+       
+      <context:annotation-config/>
+      <context:component-scan base-package="com.zl.*"/> 
+      
+      <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>    
+  
+	<bean id="nameMatchMethodPointcutAdvisor" class="org.springframework.aop.support.NameMatchMethodPointcutAdvisor">    
+	    <property name="advice" ref="visitorRoleAdvice"/>    
+<!-- 	     <property name="mappedNames">    
+	        <list>    
+	            <value>*</value>    
+	        </list>    
+	    </property>    -->
+	</bean> 
+      
+      <bean id="propertyConfigurer" class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath*:/context.properties</value>
+                <value>classpath*:/jdbc.properties</value>
+                <value>classpath*:/log4j.properties</value>
+            </list>
+        </property>
+        <property name="ignoreUnresolvablePlaceholders" value="true" />
+      </bean>
+      
+      <!-- 数据源配置 -->
+      <!-- destroy-method="close" 表示连接不使用则放回线程池中 -->
+      <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+      	<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.userName}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="initialSize" value="${jdbc.initialSize}" />
+		<property name="maxActive" value="${jdbc.maxActive}" />
+		<property name="maxWait" value="${jdbc.maxWait}" />
+		<property name="minIdle" value="${jdbc.minIdle}"/>
+		<property name="maxIdle" value="${jdbc.maxIdle}"/>
+ 		<property name="validationQuery" value="${jdbc.validationQuery}"/>
+		<property name="testWhileIdle" value="${jdbc.testWhileIdle}"/>
+		<!-- 每隔一分钟空闲链接回收器运行一次 -->
+		<property name="timeBetweenEvictionRunsMillis" value="${jdbc.timeBetweenEvictionRunsMillis}"/>
+      </bean>
+      
+      <!-- 自动扫描mapping.xml文件 -->	
+      <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+      	<property name="dataSource" ref="dataSource" />
+      	<!-- <property name="mapperLocations" value="classpath*:/sqlmap/*.xml"></property> -->
+      	<property name="configLocation" value="classpath:/mybatis.xml" /> 
+      	<property name="typeAliasesPackage" value="com.zl.domain" />
+      </bean>
+      
+      <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">    
+        <constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory" />    
+      </bean>  
+      
+<!--       dao接口所在的包，Spring自动查找doa类
+      <bean id="mybatisDao" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+      	<property name="basePackage" value="com.zl.dao"></property>
+      	<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+	  </bean> -->
+	  
+	  <!-- 事务管理 -->
+	  <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	  </bean>
+      
+</beans> 
